@@ -11,7 +11,7 @@ eigenvectors. The eigenvector x1 of A is what Eq. 22 needs for the gradient.
 import numpy as np
 from scipy.linalg import eigh
 
-from network.build_B_matrix import build_B
+from network.build_B_matrix import B_BES, build_B
 from network.kron_reduction import reduce_network
 
 
@@ -35,7 +35,7 @@ def calculate_gscr(B_red, s_gfl):
     return float(lam[0]), x1
 
 
-def gscr_with_gfm(system, s_gfm=None, b_bes=6.25, B=None):
+def gscr_with_gfm(system, s_gfm=None, b_bes=B_BES, B=None):
     """gSCR of `system` with GFM ratings `s_gfm` on its candidate nodes.
 
     `s_gfm` is ordered like system.candidate_nodes ([GFL | interior]);

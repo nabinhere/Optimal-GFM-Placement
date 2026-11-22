@@ -9,9 +9,16 @@ SG buses are ideal voltage sources (dU = 0), i.e. grounded. Their rows and
 columns are removed, but branches to them stay in the diagonal of their
 neighbours: B_ii = sum_{j=1}^{n+m+k} b_ij (paper, below Eq. 6). The resulting
 (n+m)x(n+m) matrix is ordered [GFL nodes | interior nodes].
+
+GFM ESS equivalent susceptance model (Eqs. 3, 5, 7): with the converter
+impedance dominated by its step-up transformer, a GFM ESS of rating S_GFMi
+behaves as a shunt susceptance B_BES * S_GFMi from node i to ground, with
+B_BES ~= B_T = 6.25 p.u. (Sec. V).
 """
 
 import numpy as np
+
+B_BES = 6.25  # p.u. unit susceptance of a GFM ESS grid-integration system
 
 
 def build_susceptance_matrix(branches, buses):
@@ -60,8 +67,12 @@ def partition(B, n):
     return B[:n, :n], B[:n, n:], B[n:, :n], B[n:, n:]
 
 
-def add_gfm(B1, B4, s_gfm_n, s_gfm_m, b_bes=6.25):
-    """Merge GFM ESS shunt susceptances B_BES * S_GFM into the diagonals (Eq. 7)."""
+def add_gfm(B1, B4, s_gfm_n, s_gfm_m, b_bes=B_BES):
+    """Merge GFM ESS shunt susceptances into the diagonals (Eq. 7).
+
+    B1 + B_BES S_GFMn and B4 + B_BES S_GFMm, with S_GFMn / S_GFMm the diagonal
+    matrices of GFM ratings at the GFL / interior nodes.
+    """
     return (B1 + b_bes * np.diag(s_gfm_n),
             B4 + b_bes * np.diag(s_gfm_m))
 

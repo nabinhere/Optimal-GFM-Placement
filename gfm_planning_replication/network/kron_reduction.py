@@ -12,7 +12,7 @@ so the solve uses a Cholesky factorisation.
 import numpy as np
 from scipy.linalg import solve
 
-from network.build_B_matrix import add_gfm, partition
+from network.build_B_matrix import B_BES, add_gfm, partition
 
 
 def kron_reduce(B1, B2, B3, B4):
@@ -21,10 +21,11 @@ def kron_reduce(B1, B2, B3, B4):
     return 0.5 * (B_red + B_red.T)  # remove round-off asymmetry
 
 
-def reduce_network(B, n, s_gfm=None, b_bes=6.25):
-    """Partition B, optionally add GFM shunts (Eq. 7), and Kron-reduce (Eq. 9).
+def reduce_network(B, n, s_gfm=None, b_bes=B_BES):
+    """B_red(S_GFM) = B1 + B_BES S_GFMn - B2 (B4 + B_BES S_GFMm)^{-1} B3 (Eq. 9).
 
-    `s_gfm` holds the GFM ratings of all n+m candidate nodes in B's ordering.
+    `s_gfm` holds the GFM ratings of all n+m candidate nodes in B's ordering
+    ([GFL | interior]); None means no GFM.
     """
     B1, B2, B3, B4 = partition(B, n)
     if s_gfm is not None:
