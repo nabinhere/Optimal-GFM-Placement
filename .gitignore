@@ -3,3 +3,8 @@
 /project_instruction_2026.pdf
 /System_Strength_Constrained_Grid-Forming_Energy_Storage_Planning_in_Renewable_Power_Systems.pdf
 /Technical paper example.pdf
+
+# Python build artifacts
+__pycache__/
+*.py[cod]
+*.egg-info/

@@ -1,0 +1,12 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gfm-planning-replication"
+version = "0.1.0"
+description = "Replication of system strength constrained GFM ESS planning (Liu et al., IEEE TSTE 2025)"
+requires-python = ">=3.12"
+
+[tool.setuptools]
+packages = ["network", "stability", "optimization", "validation"]

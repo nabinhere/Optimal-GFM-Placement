@@ -25,7 +25,8 @@ import numpy as np
 import pandas as pd
 
 REACTANCE_SCALE = 1.5
-S_GFL = 1.0  # p.u. rating of every GFL IBR
+S_BASE = 100.0  # MVA system base
+S_GFL = 1.0  # p.u. rating of every GFL IBR (on S_BASE)
 
 DATA_DIR = Path(__file__).resolve().parents[1] / "data" / "ieee39"
 BRANCH_CSV = DATA_DIR / "branches.csv"
@@ -60,14 +61,18 @@ class System:
 
 
 def read_andes_branches():
-    """Raw (unscaled) branch data from the ANDES ieee39 case, original numbering."""
+    """Raw (unscaled) branch data from the ANDES ieee39 case, original numbering.
+
+    ANDES stores x on each device's own Sn base; it is converted to the
+    S_BASE system base here (a no-op for ieee39, where every Sn is 100 MVA).
+    """
     import andes
 
     line = pd.read_excel(andes.get_case("ieee39/ieee39.xlsx"), sheet_name="Line")
     return pd.DataFrame({
         "from_orig": line["bus1"].astype(int),
         "to_orig": line["bus2"].astype(int),
-        "x_orig": line["x"].astype(float),
+        "x_orig": line["x"].astype(float) * S_BASE / line["Sn"].astype(float),
         "is_transformer": line["trans"].astype(bool),
     })
 
