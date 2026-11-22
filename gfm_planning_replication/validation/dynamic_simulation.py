@@ -2,18 +2,11 @@
 
 Uses a dq-frame state-space model (GFL PLL + current control, RL network,
 GFM as shunt susceptance) instead of ANDES, since RMS phasor models do not
-capture the PLL weak-grid oscillation.
+capture the PLL weak-grid oscillation. The GFL model itself lives in
+stability.gfl_model.
 """
 
-
-def gfl_admittance(s, params):
-    """Per-unit GFL admittance matrix Y_GFL(s)."""
-    raise NotImplementedError
-
-
-def critical_gscr(params):
-    """Solve Eq. 14 for CgSCR on the single-IBR equivalent (target ~2.5)."""
-    raise NotImplementedError
+from stability.gfl_model import critical_gscr, gfl_admittance  # noqa: F401
 
 
 def build_state_space(system, s_gfm, params):
