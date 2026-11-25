@@ -122,5 +122,85 @@ def load_ieee39(reactance_scale=REACTANCE_SCALE, path=BRANCH_CSV):
     )
 
 
+# ---------------------------------------------------------------------------
+# Modified IEEE 118-bus system (Sec. V-C, Fig. 10)
+#
+# Reactances are the standard MATPOWER case118 values (bundled with ANDES),
+# unscaled. Fig. 10 swaps labels between paper nodes 1-9 and the original
+# generator buses that host the GFL IBRs; all other buses keep their number:
+#
+#     paper i <-> original G118[i-1],  i = 1..9
+#
+# Two SGs (ideal sources) stay at buses 69 and 111; the other generators are
+# removed. Fig. 10 counts all 118 buses as candidates, but the SG buses are
+# grounded here, leaving 116 candidates.
+#
+# The baseline gSCR is 1.6055 (paper: 1.69). The mapping was checked against
+# every GFL node's neighbours in Fig. 10; tap, SG-set and numbering variants
+# did not close the gap, so [41] likely carries slightly different data.
+# ---------------------------------------------------------------------------
+
+DATA_DIR_118 = DATA_DIR.parent / "ieee118"
+BRANCH_CSV_118 = DATA_DIR_118 / "branches.csv"
+N_BUS_118 = 118
+G118 = [10, 12, 25, 26, 31, 46, 49, 54, 59]
+SG_NODES_118 = [69, 111]
+ORIGINAL_TO_PAPER_118 = {o: o for o in range(1, N_BUS_118 + 1)}
+for _i, _g in enumerate(G118, start=1):
+    ORIGINAL_TO_PAPER_118[_g], ORIGINAL_TO_PAPER_118[_i] = _i, _g
+
+
+def read_matpower_branches(path=None):
+    """In-service branches of MATPOWER case118 (x already on the 100 MVA base)."""
+    import re
+
+    if path is None:
+        import andes
+        path = andes.get_case("matpower/case118.m")
+    text = Path(path).read_text()
+    block = re.search(r"mpc\.branch\s*=\s*\[(.*?)\];", text, re.S).group(1)
+    rows = [line.split("%")[0].strip().rstrip(";").split() for line in block.splitlines()]
+    data = np.array([row for row in rows if row], dtype=float)
+    data = data[data[:, 10] != 0]  # status column
+    return pd.DataFrame({
+        "from_orig": data[:, 0].astype(int),
+        "to_orig": data[:, 1].astype(int),
+        "x_orig": data[:, 3],
+        "is_transformer": data[:, 8] != 0,  # nonzero tap ratio
+    })
+
+
+def export_branch_table_118(path=BRANCH_CSV_118):
+    raw = read_matpower_branches()
+    table = pd.DataFrame({
+        "from_node": raw["from_orig"].map(ORIGINAL_TO_PAPER_118),
+        "to_node": raw["to_orig"].map(ORIGINAL_TO_PAPER_118),
+        "x": raw["x_orig"],
+        **raw,
+    })
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    table.to_csv(path, index=False)
+    return path
+
+
+def load_ieee118(path=BRANCH_CSV_118):
+    """Return the modified IEEE 118-bus system in Fig. 10 numbering."""
+    path = Path(path)
+    if not path.exists():
+        export_branch_table_118(path)
+    table = pd.read_csv(path)
+    gfl = list(range(1, 10))
+    interior = [i for i in range(1, N_BUS_118 + 1) if i not in gfl + SG_NODES_118]
+    return System(
+        branches=table[["from_node", "to_node", "x"]].reset_index(drop=True),
+        gfl_nodes=gfl,
+        interior_nodes=interior,
+        sg_nodes=list(SG_NODES_118),
+        s_gfl=np.full(len(gfl), S_GFL),
+    )
+
+
 if __name__ == "__main__":
     print(f"Wrote {export_branch_table()}")
+    print(f"Wrote {export_branch_table_118()}")

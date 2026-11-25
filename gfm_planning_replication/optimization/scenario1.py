@@ -43,6 +43,7 @@ class Result:
     iterations: int = 0
     history: list = field(default_factory=list)  # ||S_{k+1} - S_k|| per iteration
     gamma: float = None  # final gamma used by Algorithm 1
+    solver: str = "alg1"  # "alg1", "sdp" or "bisection"
 
     def locations(self, system, tol=1e-4):
         """Candidate nodes with a non-negligible GFM rating."""
@@ -77,7 +78,12 @@ class SupportFunctionStep:
     def solve(self, s_k, lam_k, grad_k, solver=cp.CLARABEL):
         self.s_k.value, self.grad.value = s_k, grad_k
         self.offset.value = lam_k - grad_k @ s_k
-        self.problem.solve(solver=solver)
+        try:
+            self.problem.solve(solver=solver)
+        except cp.SolverError:
+            # Clarabel occasionally fails when the target is barely above the
+            # baseline gSCR (optimum near S = 0); SCS is slower but robust.
+            self.problem.solve(solver=cp.SCS, eps_abs=1e-10, eps_rel=1e-10)
         if self.problem.status not in (cp.OPTIMAL, cp.OPTIMAL_INACCURATE):
             raise RuntimeError(f"(P-SF_k) {self.problem.status}")
         return np.asarray(self.S.value)
@@ -158,8 +164,8 @@ def solve_sdp(system, target=TARGET_GSCR, cost=1.0, s_min=0.0, s_max=S_MAX,
     problem.solve(solver=cp.SCS, eps_abs=1e-9, eps_rel=1e-9, max_iters=200000)
     if problem.status not in (cp.OPTIMAL, cp.OPTIMAL_INACCURATE):
         raise RuntimeError(f"SDP {problem.status}")
-    s = np.asarray(S.value)
-    return Result(s, float(c @ s), gscr_with_gfm(system, s, b_bes, B)[0])
+    s = np.clip(np.asarray(S.value), lo, hi)  # SCS returns slightly infeasible values
+    return Result(s, float(c @ s), gscr_with_gfm(system, s, b_bes, B)[0], solver="sdp")
 
 
 def proportional_benchmark(system, target=TARGET_GSCR, cost=1.0, b_bes=B_BES, B=None):
@@ -177,7 +183,7 @@ def proportional_benchmark(system, target=TARGET_GSCR, cost=1.0, b_bes=B_BES, B=
 
     ratio = brentq(lambda r: gscr_with_gfm(system, s_of(r), b_bes, B)[0] - target, 0.0, 100.0)
     s = s_of(ratio)
-    return Result(s, float(c @ s), gscr_with_gfm(system, s, b_bes, B)[0])
+    return Result(s, float(c @ s), gscr_with_gfm(system, s, b_bes, B)[0], solver="bisection")
 
 
 if __name__ == "__main__":
