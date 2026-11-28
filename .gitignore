@@ -30,3 +30,6 @@ Thumbs.db
 
 
 HANDOVER.md
+# Local patches and scratch scripts
+*.patch
+/report_checks.py
