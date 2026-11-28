@@ -84,7 +84,17 @@ The planned nine-GFL system loses stability exactly when the planned gSCR falls 
 | Two-layer, N_max = 3 / 4 / 5 | 1.3845 / 1.3838 / 1.3838 | 1.2681 / 1.2615 / 1.2615 |
 
 - **The paper's 118-bus network data must differ from ours.** Our certified Scenario 1 optimum, which has *no* limit on the number of sites, is 1.2719. Limiting the number of sites can only raise the cost, yet the paper reports 1.2681 with only 3 sites. That is impossible on identical data. The paper does not publish its modified 118-bus data.
+- **The paper's own cited data source gives our network.** The IIT JEAS_IEEE118 line table the paper cites is identical to MATPOWER `case118`. `experiments/ieee118_data_checks.py` also tests resistance, tap ratios, shunts, line charging, uniform scaling, other SG locations and single-branch changes. Some variants reproduce the 1.69 baseline, but none reproduces the baseline, the centralized benchmark and the Scenario 1 cost together.
 - **The two-layer method stops early on our data.** Its stopping rule halts before it reaches the 40,000-combination reference result.
+
+### Overview figures (not in the paper)
+
+<p align="center">
+  <img src="gfm_planning_replication/results/report_gscr_vs_capacity.png" width="49%" alt="gSCR against installed GFM ESS capacity, IEEE 39-bus">
+  <img src="gfm_planning_replication/results/report_cost_comparison.png" width="43%" alt="Investment cost of every plan, this work against the paper">
+</p>
+
+The left figure shows the gSCR reached per p.u. of installed GFM capacity for three placements: the Scenario 1 optimum, the proportional benchmark and a single site. The right figure compares the cost of every plan and benchmark on both systems with the paper's reported values.
 
 ## Assumptions and differences from the paper
 
@@ -109,7 +119,7 @@ The planned nine-GFL system loses stability exactly when the planned gSCR falls 
 ```
 ├── README.md, HANDOVER.md, requirements.txt
 └── gfm_planning_replication/
-    ├── data/           branch tables of the modified IEEE 39- and 118-bus systems
+    ├── data/           branch tables of the modified IEEE 39- and 118-bus systems, IIT 118-bus line table
     ├── network/        system loading, susceptance matrix, Kron reduction
     ├── stability/      gSCR, sensitivities, GFL converter model
     ├── optimization/   Scenario 1 (Algorithm 1, SDP) and Scenario 2 (two-layer)
@@ -142,6 +152,8 @@ Run all commands from `gfm_planning_replication/`:
 | `python -m experiments.reproduce_fig9` | Table III, Fig. 9 | ~2 min |
 | `python -m experiments.reproduce_fig8` | Fig. 8, gSCR stability sweep | ~5 s |
 | `python -m experiments.reproduce_table4 --top 40000 --workers 6` | Table IV | ~1 h |
+| `python -m experiments.report_figures` | overview figures (needs the Table III and IV CSVs) | ~6 s |
+| `python -m experiments.ieee118_data_checks [--scan]` | 118-bus data-variant checks | ~5 min, longer with `--scan` |
 
 The long runs write their results to CSV as they go and resume where they stopped if interrupted. All outputs are already included in `results/`.
 

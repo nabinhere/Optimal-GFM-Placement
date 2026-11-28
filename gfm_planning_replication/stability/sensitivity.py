@@ -50,7 +50,12 @@ def site_sensitivity(system, cost, b_bes=B_BES, B=None):
     """
     _, grad = gscr_gradient(system, None, b_bes, B)
     p = grad / np.broadcast_to(np.asarray(cost, dtype=float), grad.shape)
-    order = np.argsort(-p, kind="stable")
+    # A leaf node has exactly the sensitivity of its only neighbour (nodes 2
+    # and 117 of the 118-bus system). Round-off would then decide their order,
+    # and the number of combinations visited by the two-layer search would
+    # change from machine to machine. Round first, so ties keep the candidate
+    # order (GFL nodes first, then interior nodes by number).
+    order = np.argsort(-np.round(p, 10), kind="stable")
     return p, [system.candidate_nodes[k] for k in order]
 
 

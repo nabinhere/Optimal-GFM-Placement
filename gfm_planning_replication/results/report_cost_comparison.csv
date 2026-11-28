@@ -1,0 +1,15 @@
+system,item,cost,paper_cost
+39,Centralized benchmark (1 site),4.412547015794975,4.4125
+39,Proportional benchmark (9 sites),2.8654239790492735,2.8656
+39,Scenario 1 (8 sites),2.451616552922885,2.4516
+39,"Two layer, $N_{max}$ = 2",2.9549,2.9549
+39,"Two layer, $N_{max}$ = 3",2.7561,2.7561
+39,"Two layer, $N_{max}$ = 4",2.597,2.597
+118,Centralized benchmark (1 site),2.089466051701486,2.0522
+118,"Two layer, $N_{max}$ = 3",1.3845,1.2681
+118,"Two layer, $N_{max}$ = 4",1.3838,1.2615
+118,"Two layer, $N_{max}$ = 5",1.3838,1.2615
+118,"Best of 40000, $N_{max}$ = 3",1.2977,1.2681
+118,"Best of 40000, $N_{max}$ = 4",1.277,1.2615
+118,"Best of 40000, $N_{max}$ = 5",1.2719,1.2605
+118,Scenario 1 (5 sites),1.2718782651836742,
